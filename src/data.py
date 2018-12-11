@@ -5,17 +5,18 @@ Input:
     Mixtured WJS0 tr, cv and tt path
 Output:
     One batch at a time.
-    Each inputs's shape is N x K x L (i.e. N x T x D in ASR way)
-    Each targets's shape is N x C x K x L
+    Each inputs's shape is B x K x L (i.e. B x T x D in ASR way)
+    Each targets's shape is B x C x K x L
 """
 
 import json
 import os
 
 import numpy as np
-import librosa
 import torch
 import torch.utils.data as data
+
+import librosa
 
 
 class AudioDataset(data.Dataset):
@@ -81,9 +82,9 @@ def _collate_fn(batch):
     Args:
         batch: list, len(batch) = 1. See AudioDataset.__getitem__()
     Returns:
-        xs_pad: N x K x L, torch.Tensor
-        ilens : N, torch.Tentor
-        ys_pad: N x C x K x L, torch.Tensor
+        mixtures_pad: B x K x L, torch.Tensor
+        ilens : B, torch.Tentor
+        sources_pad: B x C x K x L, torch.Tensor
     """
     # batch should be located in list
     assert len(batch) == 1
@@ -109,8 +110,8 @@ def _collate_fn(batch):
 def load_mixtures_and_sources(batch):
     """
     Returns:
-        xs: a list containing N items, each item is K x L np.ndarray
-        ys: a list containing N items, each item is K x L x C np.ndarray
+        mixtures: a list containing B items, each item is K x L np.ndarray
+        sources: a list containing B items, each item is K x L x C np.ndarray
         K varies from item to item.
     """
     mixtures, sources = [], []
