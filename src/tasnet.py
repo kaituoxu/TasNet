@@ -6,6 +6,8 @@ import torch.nn as nn
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
+EPS = 1e-8
+
 
 class TasNet(nn.Module):
     def __init__(self, L, N, hidden_size, num_layers,
@@ -35,6 +37,42 @@ class TasNet(nn.Module):
         est_source = self.decoder(mixture_w, est_mask, norm_coef)
         return est_source
 
+    @classmethod
+    def load_model(cls, path):
+        # Load to CPU
+        package = torch.load(path, map_location=lambda storage, loc: storage)
+        model = cls.load_model_from_package(package)
+        return model
+
+    @classmethod
+    def load_model_from_package(cls, package):
+        model = cls(package['L'], package['N'],
+                    package['hidden_size'], package['num_layers'],
+                    bidirectional=package['bidirectional'],
+                    nspk=package['nspk'])
+        model.load_state_dict(package['state_dict'])
+        return model
+
+    @staticmethod
+    def serialize(model, optimizer, epoch, tr_loss=None, cv_loss=None):
+        package = {
+            # hyper-parameter
+            'L': model.L,
+            'N': model.N,
+            'hidden_size': model.hidden_size,
+            'num_layers': model.num_layers,
+            'bidirectional': model.bidirectional,
+            'nspk': model.nspk,
+            # state
+            'state_dict': model.state_dict(),
+            'optim_dict': optimizer.state_dict(),
+            'epoch': epoch
+        }
+        if tr_loss is not None:
+            package['tr_loss'] = tr_loss
+            package['cv_loss'] = cv_loss
+        return package
+
 
 class Encoder(nn.Module):
     """Estimation of the nonnegative mixture weight by a 1-D gated conv layer.
@@ -60,7 +98,7 @@ class Encoder(nn.Module):
         B, K, L = mixture.size()
         # L2 Norm along L axis
         norm_coef = torch.norm(mixture, p=2, dim=2, keepdim=True)  # B x K x 1
-        norm_mixture = mixture / norm_coef  # B x K x L
+        norm_mixture = mixture / (norm_coef + EPS) # B x K x L
         # 1-D gated conv
         norm_mixture = torch.unsqueeze(norm_mixture.view(-1, L), 2)  # B*K x L x 1
         conv = F.relu(self.conv1d_U(norm_mixture))         # B*K x N x 1

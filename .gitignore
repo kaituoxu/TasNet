@@ -1,5 +1,8 @@
-
-egs/wsj0/data
+egs/*/data
+egs/*/exp
 
 tools/sph2pipe_v2.5
 tools/create-speaker-mixtures
+
+nohup.out
+__pycache__
