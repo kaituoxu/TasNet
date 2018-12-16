@@ -8,6 +8,8 @@ stage=1
 data=/home/ktxu/workspace/data/CSR-I-WSJ0-LDC93S6A
 wav_dir=/home/ktxu/workspace/data/wsj0-wav/wsj0
 
+. utils/parse_options.sh || exit 1;
+
 if [ $stage -le 1 ]; then
   echo "Convert sphere format to wav format"
 

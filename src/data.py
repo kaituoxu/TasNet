@@ -1,6 +1,15 @@
 # Created on 2018/12/09
 # Author: Kaituo XU
 """
+Logic:
+1. AudioDataLoader generate a minibatch from AudioDataset, the size of this
+   minibatch is AudioDataLoader's batchsize. For now, we always set
+   AudioDataLoader's batchsize as 1. The real minibatch size we care about is
+   set in AudioDataset's __init__(...). So actually, we generate the
+   information of one minibatch in AudioDataset.
+2. After AudioDataLoader getting one minibatch from AudioDataset,
+   AudioDataLoader calls its collate_fn(batch) to process this minibatch.
+
 Input:
     Mixtured WJS0 tr, cv and tt path
 Output:
@@ -40,7 +49,6 @@ class AudioDataset(data.Dataset):
         with open(s2_json, 'r') as f:
             s2_infos = json.load(f)
         # sort it by #samples (impl bucket)
-
         def sort(infos): return sorted(
             infos, key=lambda info: int(info[1]), reverse=True)
         sorted_mix_infos = sort(mix_infos)
@@ -106,6 +114,84 @@ def _collate_fn(batch):
     return mixtures_pad, ilens, sources_pad
 
 
+# Eval data part
+from preprocess import preprocess_one_dir
+
+class EvalDataset(data.Dataset):
+
+    def __init__(self, mix_dir, mix_json, batch_size,
+                 sample_rate=8000, L=int(8000*0.005)):
+        """
+        Args:
+            mix_dir: directory including mixture wav files
+            mix_json: json file including mixture wav files
+        """
+        super(EvalDataset, self).__init__()
+        assert mix_dir != None or mix_json != None
+        if mix_dir is not None:
+            # Generate mix.json given mix_dir
+            preprocess_one_dir(mix_dir, mix_dir, 'mix',
+                               sample_rate=sample_rate)
+            mix_json = os.path.join(mix_dir, 'mix.json')
+        with open(mix_json, 'r') as f:
+            mix_infos = json.load(f)
+        # sort it by #samples (impl bucket)
+        def sort(infos): return sorted(
+            infos, key=lambda info: int(info[1]), reverse=True)
+        sorted_mix_infos = sort(mix_infos)
+        # generate minibach infomations
+        minibatch = []
+        start = 0
+        while True:
+            end = min(len(sorted_mix_infos), start + batch_size)
+            minibatch.append([sorted_mix_infos[start:end],
+                              sample_rate, L])
+            if end == len(sorted_mix_infos):
+                break
+            start = end
+        self.minibatch = minibatch
+
+    def __getitem__(self, index):
+        return self.minibatch[index]
+
+    def __len__(self):
+        return len(self.minibatch)
+
+
+class EvalDataLoader(data.DataLoader):
+    """
+    NOTE: just use batchsize=1 here, so drop_last=True makes no sense here.
+    """
+
+    def __init__(self, *args, **kwargs):
+        super(EvalDataLoader, self).__init__(*args, **kwargs)
+        self.collate_fn = _collate_fn_eval
+
+
+def _collate_fn_eval(batch):
+    """
+    Args:
+        batch: list, len(batch) = 1. See AudioDataset.__getitem__()
+    Returns:
+        mixtures_pad: B x K x L, torch.Tensor
+        ilens : B, torch.Tentor
+        filenames: a list contain B strings
+    """
+    # batch should be located in list
+    assert len(batch) == 1
+    mixtures, filenames = load_mixtures(batch[0])
+
+    # get batch of lengths of input sequences
+    ilens = np.array([mix.shape[0] for mix in mixtures])
+
+    # perform padding and convert to tensor
+    pad_value = 0
+    mixtures_pad = pad_list([torch.from_numpy(mix).float()
+                             for mix in mixtures], pad_value)
+    ilens = torch.from_numpy(ilens)
+    return mixtures_pad, ilens, filenames
+
+
 # ------------------------------ utils ------------------------------------
 def load_mixtures_and_sources(batch):
     """
@@ -144,6 +230,32 @@ def load_mixtures_and_sources(batch):
         mixtures.append(mix)
         sources.append(s)
     return mixtures, sources
+
+
+def load_mixtures(batch):
+    """
+    Returns:
+        mixtures: a list containing B items, each item is K x L np.ndarray
+        filenames: a list containing B strings
+        K varies from item to item.
+    """
+    mixtures, filenames = [], []
+    mix_infos, sample_rate, L = batch
+    # for each utterance
+    for mix_info in mix_infos:
+        mix_path = mix_info[0]
+        # read wav file
+        mix, _ = librosa.load(mix_path, sr=sample_rate)
+        # Generate inputs and targets
+        K = int(np.ceil(len(mix) / L))
+        # padding a little. mix_len + K > pad_len >= mix_len
+        pad_len = K * L
+        pad_mix = np.concatenate([mix, np.zeros([pad_len - len(mix)])])
+        # reshape
+        mix = np.reshape(pad_mix, [K, L])
+        mixtures.append(mix)
+        filenames.append(mix_path)
+    return mixtures, filenames
 
 
 def pad_list(xs, pad_value):

@@ -28,9 +28,9 @@ parser.add_argument('--L', default=40, type=int,
 parser.add_argument('--N', default=500, type=int,
                     help='The number of basis signals')
 parser.add_argument('--hidden_size', default=500, type=int,
-                    help='Number of LSTM hidden units.')
+                    help='Number of LSTM hidden units')
 parser.add_argument('--num_layers', default=4, type=int,
-                    help='Number of LSTM layers.')
+                    help='Number of LSTM layers')
 parser.add_argument('--bidirectional', default=1, type=int,
                     help='Whether use bidirectional LSTM')
 parser.add_argument('--nspk', default=2, type=int,
@@ -41,8 +41,7 @@ parser.add_argument('--epochs', default=30, type=int,
 parser.add_argument('--half-lr', dest='half_lr', default=0, type=int,
                     help='Halving learning rate when get small improvement')
 parser.add_argument('--early-stop', dest='early_stop', default=0, type=int,
-                    help='Early stop training when halving lr but still get'
-                    'small improvement')
+                    help='Early stop training when no improvement for 10 epochs')
 parser.add_argument('--max-norm', default=5, type=float,
                     help='Gradient norm threshold to clip')
 # minibatch

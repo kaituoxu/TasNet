@@ -39,6 +39,8 @@ visdom_id="TasNet Training"
 # exp tag
 tag="" # tag for managing experiments.
 
+wsj0_origin=/home/ktxu/workspace/data/CSR-I-WSJ0-LDC93S6A
+wsj0_wav=/home/ktxu/workspace/data/wsj0-wav/wsj0
 # Directory path of wsj0 including tr, cv and tt
 data=/home/work_nfs/ktxu/data/wsj-mix/2speakers/wav8k/min/
 
@@ -46,11 +48,31 @@ data=/home/work_nfs/ktxu/data/wsj-mix/2speakers/wav8k/min/
 . ./cmd.sh
 . ./path.sh
 
+
+if [ $stage -le 0 ]; then
+  echo "Stage 0: Convert sphere format to wav format and generate mixture"
+  local/data_prepare.sh --data ${wsj0_origin} --wav_dir ${wsj0_wav}
+
+  echo "NOTE: You should generate mixture by yourself now.
+You can use tools/create-speaker-mixtures.zip which is download from
+http://www.merl.com/demos/deep-clustering/create-speaker-mixtures.zip
+If you don't have Matlab and want to use Octave, I suggest to replace
+all mkdir(...) in create_wav_2speakers.m with system(['mkdir -p '...])
+due to mkdir in Octave can not work in 'mkdir -p' way.
+e.g.:
+mkdir([output_dir16k '/' min_max{i_mm} '/' data_type{i_type}]);
+->
+system(['mkdir -p ' output_dir16k '/' min_max{i_mm} '/' data_type{i_type}]);"
+  exit 1
+fi
+
+
 if [ $stage -le 1 ]; then
   echo "Stage 1: Generating json files including wav path and duration"
   [ ! -d $dumpdir ] && mkdir $dumpdir
   preprocess.py --in-dir $data --out-dir $dumpdir --sample-rate $sample_rate
 fi
+
 
 if [ -z ${tag} ]; then
   expdir=exp/train_r${sample_rate}_L${L}_N${N}_h${hidden_size}_l${num_layers}_bi${bidirectional}_C${nspk}_epoch${epochs}_half${half_lr}_norm${max_norm}_bs${batch_size}_worker${num_workers}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_cv10
@@ -87,4 +109,16 @@ if [ $stage -le 2 ]; then
     --visdom $visdom \
     --visdom_epoch $visdom_epoch \
     --visdom-id "$visdom_id"
+fi
+
+
+if [ $stage -le 3 ]; then
+  echo "Stage 3: Separate speech using TasNet"
+  separate.py \
+  --model_path ${expdir}/final.pth.tar \
+  --mix_json data/cv10/mix.json \
+  --out_dir ${expdir}/separate \
+  --use_cuda 0 \
+  --sample_rate $sample_rate \
+  --batch_size 5
 fi

@@ -15,11 +15,11 @@ def cal_loss(source, estimate_source, source_lengths):
         estimate_source: [B, C, K, L]
         source_lengths: [B]
     """
-    max_snr, v_perms, max_snr_idx = cal_si_snr_with_pit(source,
-                                                        estimate_source,
-                                                        source_lengths)
+    max_snr, perms, max_snr_idx = cal_si_snr_with_pit(source,
+                                                      estimate_source,
+                                                      source_lengths)
     loss = 0 - torch.mean(max_snr)
-    reorder_estimate_source = reorder_source(estimate_source, v_perms, max_snr_idx)
+    reorder_estimate_source = reorder_source(estimate_source, perms, max_snr_idx)
     return loss, max_snr, estimate_source, reorder_estimate_source
 
 
