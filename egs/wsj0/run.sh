@@ -113,7 +113,19 @@ fi
 
 
 if [ $stage -le 3 ]; then
-  echo "Stage 3: Separate speech using TasNet"
+  echo "Stage 3: Evaluate separation performance"
+  evaluate.py \
+  --model_path ${expdir}/final.pth.tar \
+  --data_dir data/cv10/ \
+  --cal_sdr 1 \
+  --use_cuda 0 \
+  --sample_rate $sample_rate \
+  --batch_size 5
+fi
+
+
+if [ $stage -le 4 ]; then
+  echo "Stage 4: Separate speech using TasNet"
   separate.py \
   --model_path ${expdir}/final.pth.tar \
   --mix_json data/cv10/mix.json \

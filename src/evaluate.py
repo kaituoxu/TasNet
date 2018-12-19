@@ -50,7 +50,6 @@ def evaluate(args):
 
     with torch.no_grad():
         for i, (data) in enumerate(data_loader):
-            print("Utt", i)
             # Get batch data
             padded_mixture, mixture_lengths, padded_source = data
             if args.use_cuda:
@@ -69,6 +68,7 @@ def evaluate(args):
                                                   mixture_lengths)
             # for each utterance
             for mix, src_ref, src_est in zip(mixture, source, estimate_source):
+                print("Utt", total_cnt + 1)
                 # Compute SDRi
                 if args.cal_sdr:
                     avg_SDRi = cal_SDRi(src_ref, src_est, mix)
