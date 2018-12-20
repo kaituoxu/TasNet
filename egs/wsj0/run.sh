@@ -8,6 +8,7 @@ stage=2
 ngpu=1
 dumpdir=data
 
+# -- START TasNet Config
 sample_rate=8000
 # Network config
 L=40
@@ -18,6 +19,7 @@ bidirectional=1
 nspk=2
 # Training config
 epochs=30
+shuffle=0
 half_lr=0
 early_stop=0
 max_norm=5
@@ -35,6 +37,7 @@ print_freq=10
 visdom=0
 visdom_epoch=0
 visdom_id="TasNet Training"
+# -- END TasNet Config
 
 # exp tag
 tag="" # tag for managing experiments.
@@ -75,7 +78,7 @@ fi
 
 
 if [ -z ${tag} ]; then
-  expdir=exp/train_r${sample_rate}_L${L}_N${N}_h${hidden_size}_l${num_layers}_bi${bidirectional}_C${nspk}_epoch${epochs}_half${half_lr}_norm${max_norm}_bs${batch_size}_worker${num_workers}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}_cv10
+  expdir=exp/train_r${sample_rate}_L${L}_N${N}_h${hidden_size}_l${num_layers}_bi${bidirectional}_C${nspk}_epoch${epochs}_half${half_lr}_norm${max_norm}_bs${batch_size}_worker${num_workers}_${optimizer}_lr${lr}_mmt${momentum}_l2${l2}
 else
   expdir=exp/train_${tag}
 fi
@@ -84,8 +87,8 @@ if [ $stage -le 2 ]; then
   echo "Stage 2: Training"
   ${cuda_cmd} --gpu ${ngpu} ${expdir}/train.log \
     train.py \
-    --train-dir $dumpdir/cv10/ \
-    --valid-dir $dumpdir/cv10/ \
+    --train_dir $dumpdir/tr \
+    --valid_dir $dumpdir/cv \
     --sample_rate $sample_rate \
     --L $L \
     --N $N \
@@ -94,43 +97,47 @@ if [ $stage -le 2 ]; then
     --bidirectional $bidirectional \
     --nspk $nspk \
     --epochs $epochs \
-    --half-lr $half_lr \
-    --early-stop $early_stop \
-    --max-norm $max_norm \
-    --batch-size $batch_size \
-    --num-workers $num_workers \
+    --half_lr $half_lr \
+    --early_stop $early_stop \
+    --max_norm $max_norm \
+    --shuffle $shuffle \
+    --batch_size $batch_size \
+    --num_workers $num_workers \
     --optimizer $optimizer \
     --lr $lr \
     --momentum $momentum \
     --l2 $l2 \
-    --save-folder ${expdir} \
+    --save_folder ${expdir} \
     --checkpoint $checkpoint \
-    --print-freq ${print_freq} \
+    --print_freq ${print_freq} \
     --visdom $visdom \
     --visdom_epoch $visdom_epoch \
-    --visdom-id "$visdom_id"
+    --visdom_id "$visdom_id"
 fi
 
 
 if [ $stage -le 3 ]; then
   echo "Stage 3: Evaluate separation performance"
-  evaluate.py \
-  --model_path ${expdir}/final.pth.tar \
-  --data_dir data/cv10/ \
-  --cal_sdr 1 \
-  --use_cuda 0 \
-  --sample_rate $sample_rate \
-  --batch_size 5
+  ${decode_cmd} --gpu ${ngpu} ${expdir}/evaluate.log \
+    evaluate.py \
+    --model_path ${expdir}/final.pth.tar \
+    --data_dir $dumpdir/tt \
+    --cal_sdr 1 \
+    --use_cuda 0 \
+    --sample_rate $sample_rate \
+    --batch_size 10
 fi
 
 
 if [ $stage -le 4 ]; then
   echo "Stage 4: Separate speech using TasNet"
-  separate.py \
-  --model_path ${expdir}/final.pth.tar \
-  --mix_json data/cv10/mix.json \
-  --out_dir ${expdir}/separate \
-  --use_cuda 0 \
-  --sample_rate $sample_rate \
-  --batch_size 5
+  separate_dir=${expdir}/separate
+  ${decode_cmd} --gpu ${ngpu} ${separate_dir}/separate.log \
+    separate.py \
+    --model_path ${expdir}/final.pth.tar \
+    --mix_json $dumpdir/tt/mix.json \
+    --out_dir ${separate_dir} \
+    --use_cuda 0 \
+    --sample_rate $sample_rate \
+    --batch_size 10
 fi

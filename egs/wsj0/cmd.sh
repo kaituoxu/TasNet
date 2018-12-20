@@ -12,11 +12,11 @@
 
 # export train_cmd="run.pl --mem 2G"
 # export cuda_cmd="run.pl --mem 2G --gpu 1"
-# export decode_cmd="run.pl --mem 4G"
+export decode_cmd="run.pl --mem 4G"
 
-# JHU setup
+# NPU setup
 export train_cmd="queue.pl -q all.q --mem 2G"
-export cuda_cmd="/home/work_nfs/common/tools/pyqueue_asr.pl --mem 2G --gpu 1"
-export decode_cmd="/home/work_nfs/common/tools/pyqueue_asr.pl --mem 4G --gpu 1"
+export cuda_cmd="/home/work_nfs/common/tools/pyqueue_asr.pl --mem 2G --gpu 1 -l hostname=!node[5]"
+#export decode_cmd="/home/work_nfs/common/tools/pyqueue_asr.pl --mem 4G --gpu 1"
 #export cuda_cmd="queue.pl --mem 2G --gpu 1 --config conf/gpu.conf"
 #export decode_cmd="queue.pl -q all.q --mem 4G"
