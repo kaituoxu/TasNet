@@ -3,7 +3,14 @@
 # Created on 2018/12/10
 # Author: Kaituo XU
 
-stage=2
+# -- START Modify these path to your path
+wsj0_origin=/home/ktxu/workspace/data/CSR-I-WSJ0-LDC93S6A
+wsj0_wav=/home/ktxu/workspace/data/wsj0-wav/wsj0
+# Directory path of wsj0 including tr, cv and tt
+data=/home/work_nfs/ktxu/data/wsj-mix/2speakers/wav8k/min/
+# -- END
+
+stage=0  # Modify this to control to start from which stage
 
 ngpu=1
 dumpdir=data
@@ -18,19 +25,19 @@ num_layers=4
 bidirectional=1
 nspk=2
 # Training config
-epochs=30
+epochs=100
 shuffle=0
 half_lr=0
 early_stop=0
 max_norm=5
 # minibatch
-batch_size=128
+batch_size=10
 num_workers=4
 # optimizer
 optimizer=adam
 lr=1e-3
 momentum=0
-l2=0
+l2=1e-5
 # save and visualize
 checkpoint=0
 print_freq=10
@@ -41,11 +48,6 @@ visdom_id="TasNet Training"
 
 # exp tag
 tag="" # tag for managing experiments.
-
-wsj0_origin=/home/ktxu/workspace/data/CSR-I-WSJ0-LDC93S6A
-wsj0_wav=/home/ktxu/workspace/data/wsj0-wav/wsj0
-# Directory path of wsj0 including tr, cv and tt
-data=/home/work_nfs/ktxu/data/wsj-mix/2speakers/wav8k/min/
 
 . utils/parse_options.sh || exit 1;
 . ./cmd.sh
