@@ -19,9 +19,9 @@ See `egs/wsj0/run.sh` for example and modify related wsj0 data path.
 | Method | Causal | SDRi | SI-SNRi | Config |
 | :----: | :----: | :-----: | :--: | :----: |
 | TasNet-BLSTM (Paper) | No | 11.1 | 10.8 | |
-| TasNet-BLSTM (Mine) | No | 11.84 | 11.54 | L40 N500 hidden500 layer4 lr1e-3 epoch100 bs10 |
-| TasNet-BLSTM (Mine) | No | 11.77 | 11.46 | Above + L2 1e-4|
-| TasNet-BLSTM (Mine) | No | 13.07 | 12.78 | Above + L2 1e-5|
+| TasNet-BLSTM (Mine) | No | 11.84 | 11.54 | L=40 N=500 hidden=500 layer=4 lr=1e-3 epoch=100 batch size=10 |
+| TasNet-BLSTM (Mine) | No | 11.77 | 11.46 | Above + L2=1e-4|
+| TasNet-BLSTM (Mine) | No | 13.07 | 12.78 | Above + L2=1e-5|
 
 ## TODO
 - [ ] Layer normlization described in paper
