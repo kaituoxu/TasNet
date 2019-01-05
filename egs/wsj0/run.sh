@@ -40,6 +40,7 @@ momentum=0
 l2=1e-5
 # save and visualize
 checkpoint=0
+continue_from=""
 print_freq=10
 visdom=0
 visdom_epoch=0
@@ -111,6 +112,7 @@ if [ $stage -le 2 ]; then
     --l2 $l2 \
     --save_folder ${expdir} \
     --checkpoint $checkpoint \
+    --continue_from "$continue_from" \
     --print_freq ${print_freq} \
     --visdom $visdom \
     --visdom_epoch $visdom_epoch \
