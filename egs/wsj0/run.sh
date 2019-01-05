@@ -3,14 +3,16 @@
 # Created on 2018/12/10
 # Author: Kaituo XU
 
-# -- START Modify these path to your path
+# -- IMPORTANT
+# Modify these path to your path
 wsj0_origin=/home/ktxu/workspace/data/CSR-I-WSJ0-LDC93S6A
 wsj0_wav=/home/ktxu/workspace/data/wsj0-wav/wsj0
-# Directory path of wsj0 including tr, cv and tt
-data=/home/work_nfs/ktxu/data/wsj-mix/2speakers/wav8k/min/
-# -- END
+# Directory of wsj0 including tr, cv and tt
+data=/home/ktxu/workspace/data/wsj-mix/2speakers/wav8k/min/
 
-stage=0  # Modify this to control to start from which stage
+stage=1  # Modify this to control to start from which stage
+# --
+
 
 ngpu=1
 dumpdir=data
