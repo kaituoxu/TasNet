@@ -17,8 +17,18 @@ If you just have origin wsj0 data (sphere format):
 2. Convert sphere format wsj0 to wav format and generate mixture. `Stage 0` part provides an example.
 3. `$ bash run.sh`, that's all!
 
-You can change hyper-parameter by `$ bash run.sh --parameter_name parameter_value`.
-
+You can change hyper-parameter by `$ bash run.sh --parameter_name parameter_value`, egs, `$ bash run.sh --stage 3`. See parameter name in `egs/aishell/run.sh` before `. utils/parse_options.sh`.
+### More detail
+```bash
+# Set PATH and PYTHONPATH
+$ cd egs/wsj0/; . ./path.sh
+# Train:
+$ train.py -h
+# Evaluate performance:
+$ evaluate.py -h
+# Separate mixture audio:
+$ separate.py -h
+```
 ### Workflow
 Workflow of `egs/wsj0/run.sh`:
 - Stage 0: Convert sphere format to wav format and generate mixture (optional)
@@ -26,9 +36,8 @@ Workflow of `egs/wsj0/run.sh`:
 - Stage 2: Training
 - Stage 3: Evaluate separation performance
 - Stage 4: Separate speech using TasNet
-
 ### Visualize loss
-If you want to visualize your loss, you can use `visdom` to do that:
+If you want to visualize your loss, you can use [visdom](https://github.com/facebookresearch/visdom) to do that:
 - Open a new terminal in your remote server (recommend tmux) and run `$ visdom`
 - Open a new terminal and run `$ bash run.sh --visdom 1 --visdom_id "<any-string>"` or `$ train.py ... --visdom 1 --vidsdom_id "<any-string>"`
 - Open your browser and type `<your-remote-server-ip>:8097`, egs, `127.0.0.1:8097`
