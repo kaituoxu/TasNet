@@ -93,7 +93,7 @@ def main(args):
                                 num_workers=args.num_workers)
     cv_loader = AudioDataLoader(cv_dataset, batch_size=1,
                                 shuffle=args.shuffle,
-                                num_workers=args.num_workers)
+                                num_workers=0)
     data = {'tr_loader': tr_loader, 'cv_loader': cv_loader}
     # model
     model = TasNet(args.L, args.N, args.hidden_size, args.num_layers,
